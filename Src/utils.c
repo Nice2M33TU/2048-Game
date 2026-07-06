@@ -97,3 +97,37 @@ void utils_copy_string(char *target, const char *source, size_t target_size)
 
     target[index] = '\0';
 }
+
+bool utils_is_valid_username(char character)
+{
+    if (character >= '0' && character <= '9')
+        return true;
+
+    if (character >= 'A' && character <= 'Z')
+        return true;
+
+    if (character >= 'a' && character <= 'z')
+        return true;
+
+    if (character == '_')
+        return true;
+
+    return false;
+}
+
+bool utils_is_valid_password(char character)
+{
+    if (character == ' ')
+        return false;
+
+    if (character == '\t')
+        return false;
+
+    if (character == '\n')
+        return false;
+
+    if (character == '\r')
+        return false;
+
+    return true;
+}

@@ -8,24 +8,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-static bool judge_valid1(char character)
-{
-    if (character >= '0' && character <= '9')
-        return true;
-
-    if (character >= 'A' && character <= 'Z')
-        return true;
-
-    if (character >= 'a' && character <= 'z')
-        return true;
-
-    if (character == '_')
-        return true;
-
-    return false;
-}
-
-static bool username_is_valid(const char *username)
+static bool username_is_valid(const char *username) // 判断用户名是否合法，返回true表示合法，false表示不合法
 {
     size_t index, length = strlen(username);
 
@@ -36,31 +19,14 @@ static bool username_is_valid(const char *username)
     /* 判断用户名字符是否合法 */
     for (index = 0; index < length; index = -~index)
     {
-        if (!judge_valid1(username[index]))
+        if (!utils_is_valid_username(username[index]))
             return false;
     }
 
     return true;
 }
 
-static bool judge_valid2(char character)
-{
-    if (character == ' ')
-        return true;
-
-    if (character == '\t')
-        return true;
-
-    if (character == '\n')
-        return true;
-
-    if (character == '\r')
-        return true;
-
-    return false;
-}
-
-static bool password_is_valid(const char *password)
+static bool password_is_valid(const char *password) // 判断密码是否合法，返回true表示合法，false表示不合法
 {
     size_t index, length = strlen(password);
 
@@ -71,14 +37,14 @@ static bool password_is_valid(const char *password)
     /* 判断密码中是否合法 */
     for (index = 0; index < length; index = -~index)
     {
-        if (judge_valid2(password[index]))
+        if (!utils_is_valid_password(password[index]))
             return false;
     }
 
     return true;
 }
 
-static bool read_user_record(FILE *file, char *username, size_t username_size, char *password, size_t password_size)
+static bool read_user_record(FILE *file, char *username, size_t username_size, char *password, size_t password_size) // 读取一行用户信息，返回true表示成功，false表示失败
 {
     char line[INPUT_BUFFER_LENGTH];
     char stored_username[USER_NAME_LENGTH_MAX];
@@ -98,7 +64,7 @@ static bool read_user_record(FILE *file, char *username, size_t username_size, c
     return false;
 }
 
-static bool username_exists(const char *user_file, const char *username)
+static bool username_exists(const char *user_file, const char *username) // 判断用户名是否已存在，返回true表示已存在，false表示不存在
 {
     FILE *file = storage_open_read(user_file); // 只读
     char stored_username[USER_NAME_LENGTH_MAX];
@@ -120,7 +86,7 @@ static bool username_exists(const char *user_file, const char *username)
     return false;
 }
 
-static bool register_user(const char *user_file)
+static bool register_user(const char *user_file) // 注册用户，返回true表示成功，false表示失败
 {
     FILE *file;
     char username[USER_NAME_LENGTH_MAX];
@@ -196,7 +162,7 @@ static bool register_user(const char *user_file)
     return true;
 }
 
-static bool login_user(const char *user_file, char *current_user, size_t current_user_size)
+static bool login_user(const char *user_file, char *current_user, size_t current_user_size) // 登录用户，返回true表示成功，false表示失败
 {
     FILE *file;
     char username[USER_NAME_LENGTH_MAX];
@@ -236,7 +202,7 @@ static bool login_user(const char *user_file, char *current_user, size_t current
     return false;
 }
 
-void user_show_interface(const char *user_file, char *current_user, size_t current_user_size)
+static void user_show_interface(const char *user_file, char *current_user, size_t current_user_size) // 显示用户界面，处理用户登录、注册和注销
 {
     char choice;
 
@@ -300,4 +266,62 @@ void user_show_interface(const char *user_file, char *current_user, size_t curre
             }
         }
     }
+}
+
+void run_game_system(void)
+{
+    char choice;
+    char current_user[USER_NAME_LENGTH_MAX] = "";
+
+    ui_show_welcome();
+    ui_wait_for_enter();
+
+    while (true)
+    {
+        ui_show_main_menu(current_user);
+
+        if (!utils_read_choice(&choice))
+        {
+            puts("输入错误，请重新输入!");
+            ui_wait_for_enter();
+            continue;
+        }
+
+        if (choice == '1')
+        {
+            user_show_interface(USER_DATA_FILE,
+                                current_user,
+                                sizeof(current_user));
+        }
+        else if (choice == '2')
+        {
+            if (current_user[0] == '\0')
+            {
+                puts("请先登录后再开始游戏！");
+            }
+            else
+            {
+                ui_show_game(current_user);
+            }
+            ui_wait_for_enter();
+        }
+        else if (choice == '3')
+        {
+            ui_show_ranking();
+            ui_wait_for_enter();
+        }
+        else if (choice == '0')
+        {
+            puts("感谢您的游玩，再见！");
+            break;
+        }
+        else
+        {
+            puts("无效选项，请重新输入。 ");
+            ui_wait_for_enter();
+            continue;
+        }
+    }
+
+    ui_wait_for_enter();
 }

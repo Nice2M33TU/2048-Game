@@ -2,6 +2,33 @@
 
 #include <stdio.h>
 
+#ifdef _WIN32
+#include <windows.h>
+
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+#endif
+
+void ui_initialize_console(void)
+{
+#ifdef _WIN32
+    HANDLE output_handle;
+    DWORD output_mode;
+
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
+    output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (output_handle != INVALID_HANDLE_VALUE &&
+        GetConsoleMode(output_handle, &output_mode))
+    {
+        SetConsoleMode(output_handle,
+                       output_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    }
+#endif
+}
+
 void ui_show_welcome(void)
 {
     ui_clear_screen();
