@@ -4,23 +4,25 @@
 
 ## 小组开发环境
 
-VS Code 配置不包含任何成员电脑的绝对路径。每位成员需要设置以下用户环境变量：
+不需要修改 Windows 环境变量。工具路径统一定义在 `.vscode/settings.json` 开头，作用类似代码中的 `#define`：
 
-| 环境变量 | 指向的目录 | 目录内应包含 |
+| 路径宏 | 指向的文件 |
 | --- | --- | --- |
-| `MINGW_HOME` | MinGW 根目录 | `bin/gcc.exe` |
-| `CMAKE_HOME` | CMake 根目录 | `bin/cmake.exe` |
-| `NINJA_HOME` | Ninja 所在目录 | `ninja.exe` |
+| `2048Game.cmakePath` | `cmake.exe` |
+| `2048Game.ninjaPath` | `ninja.exe` |
+| `2048Game.gccPath` | `gcc.exe` |
 
-例如，本机可以在 PowerShell 中执行：
+配置示例：
 
-```powershell
-[Environment]::SetEnvironmentVariable("MINGW_HOME", "C:\Program Files (x86)\Dev-Cpp\MinGW64", "User")
-[Environment]::SetEnvironmentVariable("CMAKE_HOME", "D:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake", "User")
-[Environment]::SetEnvironmentVariable("NINJA_HOME", "D:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja", "User")
+```json
+{
+    "2048Game.cmakePath": "D:\\Tools\\CMake\\bin\\cmake.exe",
+    "2048Game.ninjaPath": "D:\\Tools\\Ninja\\ninja.exe",
+    "2048Game.gccPath": "D:\\Tools\\MinGW\\bin\\gcc.exe"
+}
 ```
 
-其他成员应将示例路径替换为自己电脑上的实际路径。设置后需要完全重启 VS Code。
+`tasks.json` 通过 `${config:2048Game.cmakePath}` 等宏引用这些值。其他成员只需修改上述三行，不需要改任务文件或系统环境变量。
 
 ## 编译运行
 

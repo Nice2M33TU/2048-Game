@@ -1,16 +1,17 @@
 {
-    "C_Cpp.default.compilerPath": "${env:MINGW_HOME}/bin/gcc.exe",
+    "2048Game.cmakePath": "D:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe",
+    "2048Game.ninjaPath": "D:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\Ninja\\ninja.exe",
+    "2048Game.gccPath": "C:\\Program Files (x86)\\Dev-Cpp\\MinGW64\\bin\\gcc.exe",
+
+    "C_Cpp.default.compilerPath": "${config:2048Game.gccPath}",
     "C_Cpp.default.cStandard": "c99",
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/Inc"
     ],
-    "cmake.cmakePath": "${env:CMAKE_HOME}/bin/cmake.exe",
+    "cmake.cmakePath": "${config:2048Game.cmakePath}",
     "cmake.generator": "Ninja",
-    "cmake.additionalCompilerSearchDirs": [
-        "${env:MINGW_HOME}/bin"
-    ],
     "cmake.configureSettings": {
-        "CMAKE_C_COMPILER": "${env:MINGW_HOME}/bin/gcc.exe",
-        "CMAKE_MAKE_PROGRAM": "${env:NINJA_HOME}/ninja.exe"
+        "CMAKE_C_COMPILER": "${config:2048Game.gccPath}",
+        "CMAKE_MAKE_PROGRAM": "${config:2048Game.ninjaPath}"
     }
 }
