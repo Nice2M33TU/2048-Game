@@ -3,8 +3,6 @@
 
 #include <stddef.h>
 
-#define USER_NAME_LENGTH 32
-
 /*
  * 显示用户中心。
  * 登录成功后会把用户名写入 current_user，注销后会将其清空。
