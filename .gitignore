@@ -3,4 +3,5 @@
 /.codex-temp/
 *.user
 *.suo
+/.vscode/
 /Data/user.txt
