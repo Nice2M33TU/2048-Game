@@ -12,6 +12,9 @@ static int rank_load_scores(const char *scores_file, RankEntry *entries, int max
     FILE *file = storage_open_read(scores_file);
     char line[INPUT_BUFFER_LENGTH];
     char username[USER_NAME_LENGTH_MAX];
+    char encrypted_score[INPUT_BUFFER_LENGTH];
+    char score_text[32];
+    char extra_character;
     int score, count = 0;
 
     if (file == NULL)
@@ -19,7 +22,9 @@ static int rank_load_scores(const char *scores_file, RankEntry *entries, int max
 
     while (count < max_entries && storage_read_line(file, line, sizeof(line)))
     {
-        if (sscanf(line, "%31[^\t]\t%d", username, &score) == 2 && score >= 0)
+        if (sscanf(line, "%31[^\t]\t%127[^\r\n]", username, encrypted_score) == 2 &&
+            utils_xor_decrypt_from_hex(encrypted_score, score_text, sizeof(score_text)) &&
+            sscanf(score_text, "%d%c", &score, &extra_character) == 1 && score >= 0)
         {
             utils_copy_string(entries[count].username, username, sizeof(entries[count].username));
             entries[count].score = score;
@@ -46,38 +51,6 @@ static void rank_move_up(RankEntry *entries, int index) // 将指定索引的记
         rank_swap(&entries[index], &entries[index - 1]);
         index = index - 1;
     }
-}
-
-static int rank_deduplicate(RankEntry *entries, int count) // 去重排行榜记录，保留每个用户的最高分，返回去重后的记录数
-{
-    int i, j, new_count = 0;
-    bool found;
-
-    for (i = 0; i < count; i = -~i)
-    {
-        found = false;
-        for (j = 0; j < new_count; j = -~j)
-        {
-            if (utils_string_equal(entries[i].username, entries[j].username))
-            {
-                found = true;
-                if (entries[i].score > entries[j].score)
-                {
-                    entries[j].score = entries[i].score;
-                    rank_move_up(entries, j);
-                }
-                break;
-            }
-        }
-        if (!found)
-        {
-            entries[new_count] = entries[i];
-            rank_move_up(entries, new_count);
-            new_count = -~new_count;
-        }
-    }
-
-    return new_count;
 }
 
 static int rank_find_user(const RankEntry *entries, int count, const char *username, int *best_score) // 查找指定用户名的记录，返回其在排行榜中的索引，如果未找到则返回-1，同时将其最高分写入best_score
@@ -116,16 +89,11 @@ bool rank_save_score(const char *scores_file, const char *username, int score) /
     if (scores_file == NULL || username == NULL || username[0] == '\0' || score < 0)
         return false;
 
-    cache_path_length = snprintf(cache_file,
-                                 sizeof(cache_file),
-                                 "%s.tmp",
-                                 scores_file);
-    if (cache_path_length < 0 ||
-        (size_t)cache_path_length >= sizeof(cache_file))
+    cache_path_length = snprintf(cache_file, sizeof(cache_file), "%s.tmp", scores_file);
+    if (cache_path_length < 0 || (size_t)cache_path_length >= sizeof(cache_file))
         return false;
 
     count = rank_load_scores(scores_file, entries, RANK_ENTRIES_MAX);
-    count = rank_deduplicate(entries, count);
 
     /* 查找已有记录，有则更新最高分 */
     for (i = 0; i < count; i = -~i)
@@ -203,9 +171,6 @@ void rank_show(const char *scores_file, const char *current_user) // 显示排�
     int user_rank, user_best;
 
     count = rank_load_scores(scores_file, entries, RANK_ENTRIES_MAX);
-
-    /* 去重并保持降序 */
-    count = rank_deduplicate(entries, count);
 
     user_rank = rank_find_user(entries, count, current_user, &user_best);
     ui_show_ranking(entries, count, current_user, user_rank, user_best);

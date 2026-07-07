@@ -2,6 +2,30 @@
 #include "config.h"
 
 #include <stdio.h>
+#include <string.h>
+
+static const char XOR_KEY[] = "2048GameRankKey";
+static const char HEX_DIGITS[] = "0123456789ABCDEF";
+
+static void utils_hash_update(uint32_t *hash1, uint32_t *hash2, unsigned char character)
+{
+    *hash1 = (uint32_t)(((uint64_t)(*hash1) * HASH_BASE1 + character) % HASH_MOD1);
+    *hash2 = (uint32_t)(((uint64_t)(*hash2) * HASH_BASE2 + character) % HASH_MOD2);
+}
+
+static int utils_hex_value(char character)
+{
+    if (character >= '0' && character <= '9')
+        return character - '0';
+
+    if (character >= 'A' && character <= 'F')
+        return character - 'A' + 10;
+
+    if (character >= 'a' && character <= 'f')
+        return character - 'a' + 10;
+
+    return -1;
+}
 
 bool utils_string_equal(const char *a, const char *b)
 {
@@ -129,5 +153,100 @@ bool utils_is_valid_password(char character)
     if (character == '\r')
         return false;
 
+    return true;
+}
+
+/*
+ * 这是教学级密码哈希方案，使用用户名作为salt，并通过双质数取模降低冲突概率；
+ * 适合课程设计演示，但不等同于真实项目中的高安全密码哈希。
+ */
+bool utils_password_hash(const char *username, const char *password, uint32_t *hash1, uint32_t *hash2)
+{
+    uint32_t h1 = 0;
+    uint32_t h2 = 0;
+    size_t i;
+
+    if (username == NULL || password == NULL || hash1 == NULL || hash2 == NULL)
+        return false;
+
+    for (i = 0; username[i] != '\0'; i = -~i)
+        utils_hash_update(&h1, &h2, (unsigned char)username[i]);
+
+    utils_hash_update(&h1, &h2, (unsigned char)':');
+
+    for (i = 0; password[i] != '\0'; i = -~i)
+        utils_hash_update(&h1, &h2, (unsigned char)password[i]);
+
+    *hash1 = h1;
+    *hash2 = h2;
+    return true;
+}
+
+/*
+ * XOR满足A ^ B ^ B = A，所以同一种异或思想可以完成加密和解密；
+ * 这里为了避免密文中出现特殊控制字符，额外转换成十六进制文本保存。
+ */
+bool utils_xor_encrypt_to_hex(const char *plain, char *encrypted_hex, size_t encrypted_hex_size)
+{
+    size_t plain_length;
+    size_t key_length;
+    size_t i;
+    unsigned char encrypted_byte;
+
+    if (plain == NULL || encrypted_hex == NULL || encrypted_hex_size == 0)
+        return false;
+
+    plain_length = strlen(plain);
+    key_length = strlen(XOR_KEY);
+
+    if (plain_length > (encrypted_hex_size - 1) / 2)
+        return false;
+
+    for (i = 0; i < plain_length; i = -~i)
+    {
+        encrypted_byte = (unsigned char)plain[i] ^ (unsigned char)XOR_KEY[i % key_length];
+        encrypted_hex[i * 2] = HEX_DIGITS[encrypted_byte >> 4];
+        encrypted_hex[i * 2 + 1] = HEX_DIGITS[encrypted_byte & 0x0F];
+    }
+
+    encrypted_hex[plain_length * 2] = '\0';
+    return true;
+}
+
+bool utils_xor_decrypt_from_hex(const char *encrypted_hex, char *plain, size_t plain_size)
+{
+    size_t encrypted_length;
+    size_t byte_length;
+    size_t key_length;
+    size_t i;
+    int high_value;
+    int low_value;
+    unsigned char encrypted_byte;
+
+    if (encrypted_hex == NULL || plain == NULL || plain_size == 0)
+        return false;
+
+    encrypted_length = strlen(encrypted_hex);
+    if (encrypted_length % 2 != 0)
+        return false;
+
+    byte_length = encrypted_length / 2;
+    if (byte_length >= plain_size)
+        return false;
+
+    key_length = strlen(XOR_KEY);
+
+    for (i = 0; i < byte_length; i = -~i)
+    {
+        high_value = utils_hex_value(encrypted_hex[i * 2]);
+        low_value = utils_hex_value(encrypted_hex[i * 2 + 1]);
+        if (high_value < 0 || low_value < 0)
+            return false;
+
+        encrypted_byte = (unsigned char)((high_value << 4) | low_value);
+        plain[i] = (char)(encrypted_byte ^ (unsigned char)XOR_KEY[i % key_length]);
+    }
+
+    plain[byte_length] = '\0';
     return true;
 }
