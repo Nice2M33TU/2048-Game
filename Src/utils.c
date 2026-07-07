@@ -156,10 +156,6 @@ bool utils_is_valid_password(char character)
     return true;
 }
 
-/*
- * 这是教学级密码哈希方案，使用用户名作为salt，并通过双质数取模降低冲突概率；
- * 适合课程设计演示，但不等同于真实项目中的高安全密码哈希。
- */
 bool utils_password_hash(const char *username, const char *password, uint32_t *hash1, uint32_t *hash2)
 {
     uint32_t h1 = 0;
@@ -182,10 +178,6 @@ bool utils_password_hash(const char *username, const char *password, uint32_t *h
     return true;
 }
 
-/*
- * XOR满足A ^ B ^ B = A，所以同一种异或思想可以完成加密和解密；
- * 这里为了避免密文中出现特殊控制字符，额外转换成十六进制文本保存。
- */
 bool utils_xor_encrypt_to_hex(const char *plain, char *encrypted_hex, size_t encrypted_hex_size)
 {
     size_t plain_length;
