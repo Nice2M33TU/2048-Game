@@ -1,6 +1,8 @@
 #pragma once
-#define USER_DATA_FILE "Data/user.txt"
-#define SCORES_DATA_FILE "Data/scores.txt"
+#define USER_DATA_FILE "Data/user.dat"
+#define SCORES_DATA_FILE "Data/scores.dat"
+#define RANK_DATA_FILE "Data/rank.dat"
+#define HISTORY_DATA_FILE "Data/history.dat"
 
 #define USER_PASSWORD_LENGTH_MAX 21 // 最长密码长度20+冗余位置1
 #define USER_PASSWORD_LENGTH_MIN 6  // 最短密码长度
